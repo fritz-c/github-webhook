@@ -9,6 +9,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use('*', (req, res) => {
+  console.log('((((req.url))))', req.url); // eslint-disable-line no-console
   console.log('((((req.body))))', req.body); // eslint-disable-line no-console
   console.log('((((req.query))))', req.query); // eslint-disable-line no-console
   console.log('((((req.headers))))', req.headers); // eslint-disable-line no-console
