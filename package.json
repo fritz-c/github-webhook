@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@octokit/rest": "^14.0.9",
     "github-webhook-handler": "^0.7.1",
     "nodemon": "^1.15.1"
   },

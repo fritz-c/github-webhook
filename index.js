@@ -1,9 +1,17 @@
 const http = require('http');
 const createHandler = require('github-webhook-handler');
-const handler = createHandler({ path: '/webhook', secret: process.env.WEBHOOK_SECRET });
+const octokit = require('@octokit/rest')({ debug: false });
+const handler = createHandler({
+  path: '/webhook',
+  secret: process.env.WEBHOOK_SECRET,
+});
+
+octokit.authenticate({
+  type: 'oauth',
+  token: process.env.GITHUB_DEPLOY_SECRET,
+});
 
 const PORT = process.env.PORT || 8000;
-
 http
   .createServer((req, res) => {
     handler(req, res, err => {
@@ -19,28 +27,25 @@ handler.on('error', err => {
   console.error('Error:', err.message);
 });
 
-handler.on('push', event => {
-  console.log(
-    'Received a push event for %s to %s',
-    event.payload.repository.name,
-    event.payload.ref
-  );
-});
+handler.on('release', event => {
+  if (event.payload.release.draft || event.payload.release.prerelease) {
+    console.log('Aborted release on account of it being a draft or prerelease');
+    return;
+  }
 
-handler.on('issues', event => {
-  console.log(
-    'Received an issue event for %s action=%s: #%d %s',
-    event.payload.repository.name,
-    event.payload.action,
-    event.payload.issue.number,
-    event.payload.issue.title
-  );
-});
-
-handler.on('*', event => {
-  console.log(
-    'Received an event',
-    event.payload.repository.name,
-    event.payload
-  );
+  console.log('Deploying to production');
+  octokit.repos
+    .createDeployment({
+      owner: event.payload.repository.owner.login,
+      ref: event.payload.release.tag_name,
+      repo: event.payload.repository.name,
+      environment: 'production',
+      auto_merge: false,
+    })
+    .then(() => {
+      console.log('Deployment Completed');
+    })
+    .catch(err => {
+      console.error('Deployment Failed', err);
+    });
 });
