@@ -1,22 +1,46 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-
-const app = express();
-
-// to support JSON-encoded bodies
-app.use(bodyParser.json());
-// to support URL-encoded bodies
-app.use(bodyParser.urlencoded({ extended: true }));
-
-app.use('*', (req, res) => {
-  console.log('((((req.url))))', req.url); // eslint-disable-line no-console
-  console.log('((((req.body))))', req.body); // eslint-disable-line no-console
-  console.log('((((req.query))))', req.query); // eslint-disable-line no-console
-  console.log('((((req.headers))))', req.headers); // eslint-disable-line no-console
-  res.status(200).send('hi');
-});
+const http = require('http');
+const createHandler = require('github-webhook-handler');
+const handler = createHandler({ path: '/webhook', secret: process.env.WEBHOOK_SECRET });
 
 const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
-  console.log(`Listening at http://localhost:${PORT}`);
+
+http
+  .createServer((req, res) => {
+    handler(req, res, err => {
+      res.statusCode = 404;
+      res.end('no such location');
+    });
+  })
+  .listen(PORT, () => {
+    console.log(`Listening at http://localhost:${PORT}`);
+  });
+
+handler.on('error', err => {
+  console.error('Error:', err.message);
+});
+
+handler.on('push', event => {
+  console.log(
+    'Received a push event for %s to %s',
+    event.payload.repository.name,
+    event.payload.ref
+  );
+});
+
+handler.on('issues', event => {
+  console.log(
+    'Received an issue event for %s action=%s: #%d %s',
+    event.payload.repository.name,
+    event.payload.action,
+    event.payload.issue.number,
+    event.payload.issue.title
+  );
+});
+
+handler.on('*', event => {
+  console.log(
+    'Received an event',
+    event.payload.repository.name,
+    event.payload
+  );
 });
