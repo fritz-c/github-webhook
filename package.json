@@ -7,6 +7,7 @@
     "start": "nodemon ./index.js",
     "ngrok": "node ./bin/ngrok.js",
     "release": "./bin/release.sh",
+    "release-js": "node ./bin/release.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
