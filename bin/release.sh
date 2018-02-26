@@ -28,7 +28,8 @@ echo "Tagging for release"
 tagName="$(tryToMakeTag)"
 
 echo "Pushing master branch and tag: ${tagName}"
-git push --follow-tags origin master
+git push origin master
+git push --tags origin master
 
 echo "Running standard version"
 BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
